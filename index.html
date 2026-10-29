@@ -16,6 +16,24 @@
             height: 100vh;
             margin: 0;
         }
+        
+        .top-nav {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+        .admin-btn {
+            background-color: #3b82f6;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: 0.2s;
+            border: 1px solid #2563eb;
+        }
+        .admin-btn:hover { background-color: #2563eb; }
+
         .container {
             display: flex;
             gap: 20px;
@@ -36,6 +54,8 @@
             text-transform: uppercase;
             font-weight: bold;
         }
+        
+        /* Changed result-box to an input field */
         input {
             width: 250px;
             padding: 15px;
@@ -46,45 +66,30 @@
             color: white;
             outline: none;
             transition: 0.3s;
+            box-sizing: border-box;
         }
-        input:focus {
-            border-color: #3b82f6;
-        }
-        .result-box {
-            width: 250px;
-            padding: 15px;
-            font-size: 18px;
+        input:focus { border-color: #3b82f6; }
+        
+        /* Result input styling */
+        #resultBox {
             background: #111;
             border: 2px solid #444;
-            border-radius: 8px;
             color: #ccc;
-            min-height: 24px;
-            display: flex;
-            align-items: center;
-            transition: 0.3s;
-        }
-        .result-box.success {
-            border-color: #10b981;
-            color: #10b981;
             font-weight: bold;
             font-size: 24px;
+            text-align: center;
+            cursor: pointer;
         }
-        .result-box.error {
-            border-color: #ef4444;
-            color: #ef4444;
-        }
-        .admin-link {
-            margin-top: 20px;
-            color: #888;
-            text-decoration: none;
-            font-size: 14px;
-        }
-        .admin-link:hover {
-            color: #fff;
-        }
+        #resultBox:focus { border-color: #3b82f6; }
+        #resultBox.success { border-color: #10b981; color: #10b981; }
+        #resultBox.error { border-color: #ef4444; color: #ef4444; }
     </style>
 </head>
 <body>
+
+    <div class="top-nav">
+        <a href="admin.html" class="admin-btn">⚙️ Admin Page</a>
+    </div>
 
     <div class="container">
         <div class="box">
@@ -93,18 +98,16 @@
         </div>
         
         <div class="box">
-            <label>Assigned Number</label>
-            <div class="result-box" id="resultBox">Waiting...</div>
+            <label>Assigned Number (Click to copy)</label>
+            <!-- Changed from div to input -->
+            <input type="text" id="resultBox" value="Waiting..." readonly onclick="copyResult()">
         </div>
     </div>
-
-    <a href="admin.html" class="admin-link">Go to Admin Page ⚙️</a>
 
     <script>
         const textInput = document.getElementById('textInput');
         const resultBox = document.getElementById('resultBox');
 
-        // Load data from localStorage
         function getDatabase() {
             return JSON.parse(localStorage.getItem('text_database')) || {};
         }
@@ -115,20 +118,46 @@
             const database = getDatabase();
 
             if (inputVal === "") {
-                resultBox.textContent = "Waiting...";
-                resultBox.className = "result-box";
+                resultBox.value = "Waiting...";
+                resultBox.className = "";
                 return;
             }
 
-            // Check if the text exists in the database (case-insensitive)
             if (database[inputVal]) {
-                resultBox.textContent = database[inputVal];
-                resultBox.className = "result-box success";
+                resultBox.value = database[inputVal];
+                resultBox.className = "success";
             } else {
-                resultBox.textContent = "Not Found";
-                resultBox.className = "result-box error";
+                resultBox.value = "Not Found";
+                resultBox.className = "error";
             }
         });
+
+        // Copy to clipboard when clicked
+        function copyResult() {
+            const textToCopy = resultBox.value;
+            
+            // Don't copy if it's empty or says "Waiting..." or "Not Found"
+            if (!textToCopy || textToCopy === "Waiting..." || textToCopy === "Not Found") {
+                return;
+            }
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                // Visual feedback: flash green
+                const originalColor = resultBox.style.borderColor;
+                resultBox.style.borderColor = "#10b981";
+                resultBox.style.color = "#10b981";
+                
+                setTimeout(() => {
+                    resultBox.style.borderColor = originalColor;
+                    // Re-evaluate success class
+                    if (textToCopy !== "Waiting...") {
+                         resultBox.classList.add("success");
+                    }
+                }, 300);
+            }).catch(err => {
+                console.error("Failed to copy: ", err);
+            });
+        }
     </script>
 </body>
 </html>
